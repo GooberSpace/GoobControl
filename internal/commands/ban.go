@@ -11,6 +11,18 @@ import (
 )
 
 func handleBan(event *events.ApplicationCommandInteractionCreate) {
+
+	// Handle ban and return embed
+	embed := checkDurationValidityAndBan(event)
+
+	if err := event.CreateMessage(
+		discord.NewMessageCreateBuilder().AddEmbeds(embed.Build()).Build(),
+	); err != nil {
+		slog.Error("Error responding to interaction", slog.Any("err", err))
+	}
+}
+
+func checkDurationValidityAndBan(event *events.ApplicationCommandInteractionCreate) *discord.EmbedBuilder {
 	data := event.SlashCommandInteractionData()
 	user := data.Member("member")
 	reason, reasonSet := data.OptString("reason")
@@ -22,18 +34,6 @@ func handleBan(event *events.ApplicationCommandInteractionCreate) {
 	if !purgeDurationSet {
 		purgeDurationString = "0s"
 	}
-
-	// Handle ban and return embed
-	embed := checkDurationValidityAndBan(event, user, reason, purgeDurationString)
-
-	if err := event.CreateMessage(
-		discord.NewMessageCreateBuilder().AddEmbeds(embed.Build()).Build(),
-	); err != nil {
-		slog.Error("Error responding to interaction", slog.Any("err", err))
-	}
-}
-
-func checkDurationValidityAndBan(event *events.ApplicationCommandInteractionCreate, user discord.ResolvedMember, reason string, purgeDurationString string) *discord.EmbedBuilder {
 	parsedDuration, parseErr := time.ParseDuration(purgeDurationString)
 	if parseErr != nil {
 		return discord.NewEmbedBuilder().
