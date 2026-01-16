@@ -23,9 +23,8 @@ func handleBan(event *events.ApplicationCommandInteractionCreate) {
 		purgeDurationString = "0s"
 	}
 
-	// Validate and parse duration
-	parsedDuration, err := time.ParseDuration(purgeDurationString)
-	embed := checkDurationValidityAndBan(event, user, reason, parsedDuration, err)
+	// Handle ban and return embed
+	embed := checkDurationValidityAndBan(event, user, reason, purgeDurationString)
 
 	if err := event.CreateMessage(
 		discord.NewMessageCreateBuilder().AddEmbeds(embed.Build()).Build(),
@@ -34,7 +33,8 @@ func handleBan(event *events.ApplicationCommandInteractionCreate) {
 	}
 }
 
-func checkDurationValidityAndBan(event *events.ApplicationCommandInteractionCreate, user discord.ResolvedMember, reason string, parsedDuration time.Duration, parseErr error) *discord.EmbedBuilder {
+func checkDurationValidityAndBan(event *events.ApplicationCommandInteractionCreate, user discord.ResolvedMember, reason string, purgeDurationString string) *discord.EmbedBuilder {
+	parsedDuration, parseErr := time.ParseDuration(purgeDurationString)
 	if parseErr != nil {
 		return discord.NewEmbedBuilder().
 			SetTitle("Parameter error").
